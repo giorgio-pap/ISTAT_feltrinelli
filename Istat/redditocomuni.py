@@ -79,6 +79,7 @@ for x in range(2015,2021):
     
     #make a barplot
     ax = sns.barplot(x = "Tipo di Lavoro", y="Percentuale", data=f3_T)
+    
     plt.title(title_subplot,fontsize=14)
     plt.suptitle(anno,fontsize=18, y=1)
     
@@ -132,32 +133,34 @@ for x in range(2015,2021):
     f1.fillna(0, inplace=True)
     
     #create a total value
+    f1.loc[:,'Column_Total'] = f1.sum(numeric_only=True, axis=1)
     f1.loc['Totale']= f1.sum(numeric_only=True, axis=0)
     
     #keep the total row
     f2 = f1.loc[["Totale"]]
     
+    #calcucate percentages based on last column
+    f3 = f2[['0-10k','10k-15k', "15k-26k",
+        "26k-55k", "55k-75k", "75k-120k", ">120k"]].div(f2.Column_Total, axis=0)*100
+    
     #make columns into rows
-    f2_T = f2.T
+    f3_T = f3.T
     
     #transform the index into a column
-    f2_T['Fascia'] = f2_T.index
+    f3_T['Fascia'] = f3_T.index
     
     #insert a column with the year
-    f2_T.insert(0, 'Anno', anno)
+    f3_T.insert(0, 'Anno', anno)
     
     #reset the index
-    f2_T = f2_T.reset_index(drop=True)
+    f3_T = f3_T.reset_index(drop=True)
 
     #append the df to the empty list
-    appended_data.append(f2_T)
+    appended_data.append(f3_T)
 
 #concatenate the appended things
 #make only one df with all years    
 data = pd.concat(appended_data)
-
-#read the data as every 1000 people
-data["Totale"] = data["Totale"]/1000
 
 #reset index
 data = data.reset_index(drop=True)
@@ -169,9 +172,11 @@ fig,ax = plt.subplots()
 for name in pd.unique(data['Fascia']):
     ax.plot(data[data.Fascia==name].Anno,data[data.Fascia==name].Totale,label=name)
 
-ax.set_title("Numero di contribuenti per fascia (ogni 1000 contribuenti)")
+ax.set_title("Fascia dei contribuenti per anno")
 ax.set_xlabel("Anno")
-ax.set_ylabel("Numero di contribuenti")
+ax.set_ylabel("Numero di contribuenti in percentuale")
+
+
 
 #legend outside of the plot
 lgd = ax.legend(loc='center left', bbox_to_anchor=(1, 0.83))  
